@@ -5,6 +5,7 @@ export const colors = {
   textMuted: '#77736C',
   border: '#DDD8CF',
   accent: '#7E2F28',
+  imageOverlay: 'rgba(17, 17, 17, 0.68)',
   placeholderStone: '#D8D2C8',
   placeholderTaupe: '#B6A99A',
   placeholderInk: '#3A3937',
@@ -33,6 +34,7 @@ export const fontSizes = {
   caption: 12,
   body: 16,
   subtitle: 20,
+  action: 32,
   title: 40,
 } as const;
 
@@ -40,5 +42,6 @@ export const lineHeights = {
   caption: 16,
   body: 24,
   subtitle: 26,
+  action: 36,
   title: 44,
 } as const;

@@ -149,3 +149,24 @@ npx expo start
 ```
 
 The developer can then use Expo Go or an installed iOS/Android simulator.
+
+## 2026-07-26 — Full-bleed clothing cards
+
+- Kept the existing two-column Closet layout, clothing data, navigation, and
+  item interactions unchanged.
+- Updated clothing cards so the garment image or local placeholder fills the
+  complete card surface.
+- Moved item name, category, and color into a bottom-left image overlay.
+- Added a shared translucent image-overlay color token to preserve text
+  legibility across light and dark garment imagery.
+- Did not add dependencies or change clothing-store behavior.
+
+## 2026-07-26 — Full-screen clothing detail
+
+- Kept clothing lookup, routing, edit mode, archive, and delete behavior
+  unchanged.
+- Updated the clothing detail presentation to use the garment image or
+  placeholder as a full-screen background.
+- Consolidated the name, category, color, and brand into a bottom-left overlay.
+- Moved Edit, Archive, and Delete into a top-right overflow menu while
+  preserving their existing actions.

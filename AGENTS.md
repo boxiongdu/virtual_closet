@@ -6,7 +6,7 @@ This is a private, single-user virtual closet MVP.
 
 Read these files before making changes:
 
-- docs/PRD.md
+- docs/virtual_closet_prd.md
 - docs/MVP_SCOPE.md
 
 Do not add functionality listed as out of scope.
@@ -39,3 +39,4 @@ Do not add functionality listed as out of scope.
 - Do not install new dependencies unless they are necessary.
 - Do not perform destructive database operations without approval.
 - Preserve existing working behavior.
+- Always record changes in project_decisions.md

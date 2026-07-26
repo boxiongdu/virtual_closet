@@ -5,7 +5,7 @@ import { colors, fontSizes, radii, spacing } from '../../lib/theme';
 export default function TabLayout() {
   return (
     <Tabs
-      initialRouteName="closet"
+      initialRouteName="today"
       screenOptions={{
         headerShown: false,
         sceneStyle: {
@@ -34,15 +34,21 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="closet"
+        name="today"
         options={{
-          title: 'Closet',
+          title: 'Today',
         }}
       />
       <Tabs.Screen
         name="calendar"
         options={{
           title: 'Calendar',
+        }}
+      />
+      <Tabs.Screen
+        name="closet"
+        options={{
+          title: 'Closet',
         }}
       />
     </Tabs>

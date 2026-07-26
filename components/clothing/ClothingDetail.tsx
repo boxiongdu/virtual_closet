@@ -4,7 +4,6 @@ import {
   Alert,
   Image,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -38,10 +37,11 @@ function formatCategory(category: string) {
 export function ClothingDetail({ id }: ClothingDetailProps) {
   const item = useClothingItem(id);
   const [isEditing, setIsEditing] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   if (!item) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.missingSafeArea}>
         <View style={styles.missing}>
           <Text style={styles.missingTitle}>Clothing not found</Text>
           <Pressable onPress={() => router.back()} style={styles.textButton}>
@@ -86,55 +86,87 @@ export function ClothingDetail({ id }: ClothingDetailProps) {
   };
 
   return (
-    <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonLabel}>← Closet</Text>
-        </Pressable>
-
-        {item.imageUri ? (
-          <Image source={{ uri: item.imageUri }} style={styles.image} />
-        ) : (
-          <View
-            style={[
-              styles.image,
-              { backgroundColor: toneColors[item.placeholderTone] },
-            ]}
-          >
-            <Text style={styles.imageNumber}>{item.id}</Text>
-          </View>
-        )}
-
-        <View style={styles.header}>
-          <Text style={styles.eyebrow}>{formatCategory(item.category)}</Text>
-          <Text style={styles.title}>{item.name}</Text>
+    <View style={styles.container}>
+      {item.imageUri ? (
+        <Image
+          resizeMode="cover"
+          source={{ uri: item.imageUri }}
+          style={styles.image}
+        />
+      ) : (
+        <View
+          style={[
+            styles.image,
+            { backgroundColor: toneColors[item.placeholderTone] },
+          ]}
+        >
+          <Text style={styles.imageNumber}>{item.id}</Text>
         </View>
+      )}
 
-        <View style={styles.details}>
-          <DetailRow label="Category" value={formatCategory(item.category)} />
-          <DetailRow label="Color" value={item.color} />
-          <DetailRow label="Brand" value={item.brand ?? '—'} />
-        </View>
-
-        <View style={styles.actions}>
+      <SafeAreaView edges={['top', 'bottom']} style={styles.overlay}>
+        <View style={styles.topBar}>
           <Pressable
-            onPress={() => setIsEditing(true)}
-            style={styles.primaryButton}
+            accessibilityLabel="Back to closet"
+            accessibilityRole="button"
+            onPress={() => router.back()}
+            style={styles.roundButton}
           >
-            <Text style={styles.primaryButtonLabel}>Edit</Text>
+            <Text style={styles.roundButtonLabel}>←</Text>
           </Pressable>
-          <Pressable onPress={handleArchive} style={styles.secondaryButton}>
-            <Text style={styles.secondaryButtonLabel}>Archive</Text>
-          </Pressable>
-          <Pressable onPress={handleDelete} style={styles.deleteButton}>
-            <Text style={styles.deleteButtonLabel}>Delete</Text>
-          </Pressable>
+
+          <View style={styles.menuArea}>
+            <Pressable
+              accessibilityLabel="Clothing management menu"
+              accessibilityRole="button"
+              accessibilityState={{ expanded: isMenuOpen }}
+              onPress={() => setIsMenuOpen((open) => !open)}
+              style={styles.roundButton}
+            >
+              <Text style={styles.menuButtonLabel}>•••</Text>
+            </Pressable>
+
+            {isMenuOpen ? (
+              <View style={styles.menu}>
+                <Pressable
+                  onPress={() => {
+                    setIsMenuOpen(false);
+                    setIsEditing(true);
+                  }}
+                  style={styles.menuItem}
+                >
+                  <Text style={styles.menuItemLabel}>Edit</Text>
+                </Pressable>
+                <Pressable
+                  onPress={handleArchive}
+                  style={[styles.menuItem, styles.menuItemBorder]}
+                >
+                  <Text style={styles.menuItemLabel}>Archive</Text>
+                </Pressable>
+                <Pressable
+                  onPress={handleDelete}
+                  style={[styles.menuItem, styles.menuItemBorder]}
+                >
+                  <Text style={styles.deleteMenuItemLabel}>Delete</Text>
+                </Pressable>
+              </View>
+            ) : null}
+          </View>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+
+        <View style={styles.information}>
+          <Text style={styles.title}>{item.name}</Text>
+          <View style={styles.details}>
+            <DetailRow
+              label="Category"
+              value={formatCategory(item.category)}
+            />
+            <DetailRow label="Color" value={item.color} />
+            <DetailRow label="Brand" value={item.brand ?? '—'} />
+          </View>
+        </View>
+      </SafeAreaView>
+    </View>
   );
 }
 
@@ -153,120 +185,123 @@ function DetailRow({ label, value }: DetailRowProps) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
+    flex: 1,
+    backgroundColor: colors.text,
+  },
+  missingSafeArea: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  content: {
-    paddingBottom: spacing['3xl'],
-    paddingHorizontal: spacing.xl,
-  },
-  backButton: {
-    alignSelf: 'flex-start',
-    minHeight: 44,
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  backButtonLabel: {
-    color: colors.text,
-    fontSize: fontSizes.body,
-  },
   image: {
-    aspectRatio: 0.9,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    height: undefined,
-    justifyContent: 'space-between',
-    padding: spacing.lg,
-    width: '100%',
+    ...StyleSheet.absoluteFillObject,
+    padding: spacing.xl,
   },
   imageNumber: {
     color: colors.text,
     fontSize: fontSizes.subtitle,
     lineHeight: lineHeights.subtitle,
   },
-  header: {
-    paddingBottom: spacing['2xl'],
-    paddingTop: spacing['2xl'],
+  overlay: {
+    flex: 1,
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
+    width: '100%',
   },
-  eyebrow: {
-    color: colors.textMuted,
-    fontSize: fontSizes.caption,
-    fontWeight: '600',
-    letterSpacing: 1.4,
-    lineHeight: lineHeights.caption,
-    marginBottom: spacing.sm,
-    textTransform: 'uppercase',
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    zIndex: 2,
   },
-  title: {
-    color: colors.text,
-    fontSize: fontSizes.title,
-    fontWeight: '400',
-    letterSpacing: -1.2,
-    lineHeight: lineHeights.title,
+  roundButton: {
+    alignItems: 'center',
+    backgroundColor: colors.imageOverlay,
+    borderColor: 'rgba(255, 252, 247, 0.28)',
+    borderRadius: radii.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+    height: 48,
+    justifyContent: 'center',
+    width: 48,
   },
-  details: {
+  roundButtonLabel: {
+    color: colors.surface,
+    fontSize: fontSizes.subtitle,
+    lineHeight: lineHeights.subtitle,
+  },
+  menuButtonLabel: {
+    color: colors.surface,
+    fontSize: fontSizes.body,
+    fontWeight: '700',
+    letterSpacing: 1,
+    lineHeight: lineHeights.body,
+  },
+  menuArea: {
+    alignItems: 'flex-end',
+  },
+  menu: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    marginTop: spacing.sm,
+    overflow: 'hidden',
+    width: 152,
+  },
+  menuItem: {
+    justifyContent: 'center',
+    minHeight: 48,
+    paddingHorizontal: spacing.lg,
+  },
+  menuItemBorder: {
     borderTopColor: colors.border,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
+  menuItemLabel: {
+    color: colors.text,
+    fontSize: fontSizes.body,
+    lineHeight: lineHeights.body,
+  },
+  deleteMenuItemLabel: {
+    color: colors.accent,
+    fontSize: fontSizes.body,
+    lineHeight: lineHeights.body,
+  },
+  information: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.imageOverlay,
+    borderRadius: radii.md,
+    maxWidth: '92%',
+    padding: spacing.lg,
+  },
+  title: {
+    color: colors.surface,
+    fontSize: fontSizes.action,
+    fontWeight: '400',
+    letterSpacing: -0.8,
+    lineHeight: lineHeights.action,
+  },
+  details: {
+    gap: spacing.sm,
+    marginTop: spacing.lg,
+  },
   detailRow: {
-    borderBottomColor: colors.border,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    alignItems: 'baseline',
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.lg,
+    gap: spacing.sm,
   },
   detailLabel: {
-    color: colors.textMuted,
+    color: colors.border,
     fontSize: fontSizes.caption,
     letterSpacing: 1,
     lineHeight: lineHeights.caption,
     textTransform: 'uppercase',
   },
   detailValue: {
-    color: colors.text,
-    fontSize: fontSizes.body,
-    lineHeight: lineHeights.body,
-    textTransform: 'capitalize',
-  },
-  actions: {
-    gap: spacing.md,
-    paddingTop: spacing['2xl'],
-  },
-  primaryButton: {
-    alignItems: 'center',
-    backgroundColor: colors.text,
-    borderRadius: radii.pill,
-    justifyContent: 'center',
-    minHeight: 52,
-  },
-  primaryButtonLabel: {
     color: colors.surface,
-    fontSize: fontSizes.body,
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    alignItems: 'center',
-    borderColor: colors.border,
-    borderRadius: radii.pill,
-    borderWidth: StyleSheet.hairlineWidth,
-    justifyContent: 'center',
-    minHeight: 52,
-  },
-  secondaryButtonLabel: {
-    color: colors.text,
-    fontSize: fontSizes.body,
-    fontWeight: '600',
-  },
-  deleteButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 44,
-  },
-  deleteButtonLabel: {
-    color: colors.accent,
-    fontSize: fontSizes.body,
+    fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
+    textTransform: 'capitalize',
   },
   missing: {
     alignItems: 'center',

@@ -42,7 +42,7 @@ or a dense productivity dashboard.
 
 ### Card design
 
-- Cards should have a light surface on a warm neutral background.
+- Cards should have a transparent surface on a warm neutral background.
 - Use restrained corner rounding; avoid excessively soft or playful shapes.
 - Prefer hairline borders over heavy shadows.
 - If elevation is necessary, keep it subtle and reserve it for floating
