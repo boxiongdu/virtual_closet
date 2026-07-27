@@ -1,123 +1,462 @@
-# UI Reference Notes
+# UI Reference — Personal Fashion Journal App
 
-## Purpose
+## 1. Product Identity
 
-This document records the visual direction extracted from the five reference
-screenshots supplied on 2026-07-25. The references are inspiration rather than
-templates. The Virtual Closet should remain original, product-appropriate, and
-within the MVP scope.
+This app is not a wardrobe inventory manager.
 
-## Shared visual direction
+It is a **private fashion journal** that helps the user:
+- record daily outfits
+- remember personal style moments
+- understand their wardrobe
+- reduce unnecessary purchases
 
-The references combine editorial fashion layouts with a compact mobile
-dashboard. Their strongest shared qualities are restraint, confident type,
-precise alignment, and generous negative space. The intended Virtual Closet
-expression is a quiet, premium wardrobe tool rather than an ecommerce catalog
-or a dense productivity dashboard.
+The emotional feeling should be:
 
-### Layout structure
+> "My personal fashion archive"
 
-- Prefer one clear focal area per screen.
-- Use generous outer margins and consistent alignment edges.
-- Let content breathe before adding dividers or containers.
-- Future closet browsing should favor an orderly image-led grid.
-- Future calendar content should use clear groups with deliberate whitespace.
-- Preserve a strong distinction between page content and bottom navigation.
+Not:
 
-### Spacing
+> "A database of clothes"
 
-- Use a small, consistent spacing scale instead of isolated values.
-- Favor 24–48 point page spacing for primary composition.
-- Use tighter 8–16 point spacing only inside related controls or cards.
-- Keep large quiet areas around titles and key wardrobe imagery.
+The app should feel like:
+- a fashion magazine
+- a personal lookbook
+- a private diary
+- a creative archive
 
-### Typography hierarchy
+---
 
-- Use system typography until a product font is intentionally selected.
-- Page titles should be large, regular-weight, and editorial rather than bold.
-- Body text should be compact and highly legible.
-- Navigation and metadata may use small uppercase text with measured letter
-  spacing.
-- Avoid using many weights or sizes on the same screen.
+# 2. Visual Direction
 
-### Card design
+## Core Style
 
-- Cards should have a transparent surface on a warm neutral background.
-- Use restrained corner rounding; avoid excessively soft or playful shapes.
-- Prefer hairline borders over heavy shadows.
-- If elevation is necessary, keep it subtle and reserve it for floating
-  navigation or primary actions.
-- Image cards should let photography dominate, with concise metadata below.
+The visual language combines:
 
-### Navigation style
+- 50% editorial fashion magazine
+- 30% personal diary
+- 20% modern fashion brand
 
-- Keep the two-tab navigation visually quiet and persistent.
-- Use a contained, rounded surface with clear active and inactive text colors.
-- Avoid decorative icons until an intentional icon system is selected.
-- Do not add navigation destinations beyond Closet and Calendar.
+Reference feelings:
+- Vogue archive
+- independent fashion portfolio
+- luxury lookbook
+- minimalist design studio
 
-### Visual density
+---
 
-- Default to low density and progressive disclosure.
-- Avoid dashboards filled with metrics, badges, or controls.
-- Do not reproduce ecommerce pricing, sales, cart, or shopping patterns.
-- Present only information required for wardrobe browsing and outfit history.
+# 3. Design Principles
 
-### Overall aesthetic
+## 3.1 Image First
 
-- Minimal and editorial.
-- Warm, neutral, and tactile rather than stark clinical white.
-- Mostly monochrome with a muted red accent used sparingly.
-- Precise and calm, with fashion imagery becoming the visual focus when real
-  closet content is introduced.
+Photos are the most important content.
 
-## Design tokens
+The UI should never compete with photos.
 
-The implementation source of truth is `lib/theme.ts`.
+Prefer:
+Large image
 
-### Colors
+Small context
 
-- `background`: warm neutral page canvas
-- `surface`: slightly brighter cards and navigation
-- `text`: near-black primary content
-- `textMuted`: secondary labels and inactive navigation
-- `border`: warm hairline separators
-- `accent`: muted heritage red for rare emphasis
+Minimal metadata
 
-### Spacing
 
-The scale runs from `xs` (4) through `4xl` (64). Components should choose the
-closest existing token before introducing a new value.
+Avoid:
 
-### Border radius
 
-- `sm`: compact controls
-- `md`: standard cards
-- `lg`: prominent cards and navigation surfaces
-- `pill`: fully rounded controls only
+Many cards
+Many buttons
+Many labels
 
-### Typography
 
-The initial scale includes caption, body, subtitle, and title sizes with paired
-line heights. New sizes should be added only when an actual hierarchy cannot
-be expressed with the existing scale.
+---
 
-## Current application
+## 3.2 Editorial Layout
 
-- Closet and Calendar remain placeholder screens containing only their titles.
-- Both screens use the shared page canvas and editorial title treatment.
-- The existing bottom tabs use the shared surface, border, radius, spacing, and
-  typography tokens.
-- No screenshots, sample products, fake wardrobe data, or new features were
-  added.
+Layouts should feel curated.
 
-## Future usage rules
+Avoid traditional app grids.
 
-- Reuse tokens rather than hard-coding visual values.
-- Keep reusable visual composition in `components/shared`.
-- Use real user wardrobe imagery when image-led layouts are implemented.
-- Maintain accessible contrast and touch targets even when pursuing a minimal
-  look.
-- Treat the accent color as emphasis, not decoration.
-- Revisit tokens deliberately as real Closet and Calendar components emerge;
-  do not expand the system speculatively.
+Avoid:
+
+- dashboard style
+- excessive cards
+- dense information
+
+Prefer:
+
+- asymmetric layouts
+- magazine composition
+- strong visual hierarchy
+
+
+Example:
+
+GOOD:
+            LOOKS
+
+          July 2026
+
+
+          [large photo]
+
+      27.07.2026
+  
+BAD:
+
+
+Photo
+Title
+Category
+Color
+Brand
+Button
+Button
+
+
+---
+
+## 3.3 Typography as Design
+
+Typography is a major visual element.
+
+Use:
+
+### Display typography
+
+For:
+- page titles
+- months
+- important moments
+
+Style:
+- elegant
+- large
+- confident
+
+
+Examples:
+Looks
+
+July 2026
+
+Today's Look
+
+### Supporting typography
+
+For:
+- metadata
+- categories
+- dates
+
+Style:
+- clean
+- minimal
+- uppercase labels
+
+
+Examples:
+
+
+STYLE ARCHIVE
+
+DAILY LOOK
+
+TOP · IVORY
+
+
+---
+
+# 4. Color System
+
+## Background
+
+Warm paper / ivory.
+
+Example:
+
+
+#F7F4ED
+
+
+The app should not feel pure white.
+
+---
+
+## Primary text
+
+Soft black:
+
+
+#1C1C1C
+
+
+Avoid pure #000000.
+
+---
+
+## Secondary text
+
+Warm gray:
+
+
+#77736C
+
+
+---
+
+## Accent colors
+
+Use sparingly.
+
+Possible accents:
+
+- muted olive
+- warm orange
+- lime yellow
+
+Accent colors should appear as small moments, not the whole interface.
+
+---
+
+# 5. Components
+
+## 5.1 Navigation
+
+Navigation should be quiet.
+
+Current:
+
+
+LOOKS CALENDAR CLOSET
+
+
+is acceptable.
+
+But styling should be minimal.
+
+Avoid:
+- large pills
+- heavy borders
+
+Prefer:
+
+
+Looks Calendar Closet
+
+
+with subtle active indicator.
+
+---
+
+## 5.2 Buttons
+
+Avoid large SaaS-style buttons.
+
+Avoid:
+
+
+BLACK ROUND BUTTON
+SAVE
+
+
+Prefer editorial actions:
+
+
+Save →
+Replace →
+Edit →
+
+
+Small, elegant, secondary.
+
+---
+
+## 5.3 Cards
+
+Avoid database cards.
+
+Avoid:
+
+
+Grey rectangle
+Item name
+Category
+Color
+
+
+Prefer:
+
+
+Image
+
+Item name
+
+Small metadata
+
+
+The image represents the object.
+
+---
+
+# 6. Screen Guidelines
+
+## Looks Tab
+
+Purpose:
+
+Daily outfit memory.
+
+Main action:
+
+Take today's photo.
+
+Layout:
+
+
+LOOKS
+
+Date selector
+
+Large outfit photo
+
+Small date/context
+
+Previous looks
+
+
+The experience should feel like opening a diary.
+
+---
+
+## Calendar Tab
+
+Purpose:
+
+Browse outfit history.
+
+Not a productivity calendar.
+
+It should feel like:
+
+"my style timeline"
+
+Prefer:
+
+- photo thumbnails inside dates
+- visual memories
+- month archive
+
+Example:
+
+
+July 2026
+
+1 2 3
+
+  [photo]
+
+8 9 10
+
+  [photo]
+
+---
+
+## Closet Tab
+
+Purpose:
+
+Understand wardrobe.
+
+Not inventory management.
+
+It should feel like:
+
+"a personal collection"
+
+Prefer:
+
+- image gallery
+- fashion archive
+- collection view
+
+Avoid:
+
+- shopping catalog feeling
+- too much metadata
+
+---
+
+# 7. Image Treatment
+
+Images should have:
+
+- large display area
+- rounded corners
+- natural cropping
+- minimal overlays
+
+Avoid:
+
+- dark gradients
+- too much text over images
+
+Text should usually sit outside the image.
+
+---
+
+# 8. Motion
+
+Animations should feel like:
+
+- flipping a magazine
+- opening a photo album
+
+Prefer:
+
+- smooth transitions
+- subtle fades
+- gentle movement
+
+Avoid:
+
+- flashy animations
+- gamified interactions
+
+---
+
+# 9. Things To Avoid
+
+Do NOT make the app look like:
+
+- Notion
+- inventory software
+- shopping apps
+- productivity dashboards
+- social media feeds
+
+Avoid:
+
+- excessive buttons
+- excessive information
+- crowded screens
+- strong app-like cards
+
+---
+
+# 10. Overall Success Criteria
+
+When opening the app, the user should think:
+
+"This feels like my own fashion magazine."
+
+Not:
+
+"This helps me organize my clothes."
+
+The app should prioritize:
+1. Memory
+2. Beauty
+3. Personal expression
+4. Organization
+
+in that order.

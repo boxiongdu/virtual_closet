@@ -13,6 +13,20 @@ export const placeholderTones = ['stone', 'taupe', 'ink', 'clay'] as const;
 
 export type PlaceholderTone = (typeof placeholderTones)[number];
 
+export type ClothingSource =
+  | {
+      type: 'photo';
+    }
+  | {
+      type: 'url';
+      url: string;
+    }
+  | {
+      type: 'taobao';
+      originalUrl: string;
+      resolvedUrl?: string;
+    };
+
 export type ClothingItem = {
   id: string;
   name: string;
@@ -21,16 +35,21 @@ export type ClothingItem = {
   category: ClothingCategory;
   color: string;
   brand?: string;
-  sourceUrl?: string;
+  purchaseDate?: string;
+  notes?: string;
+  source: ClothingSource;
   archived: boolean;
 };
 
-export type ClothingInput = Pick<
-  ClothingItem,
-  | 'imageUri'
-  | 'placeholderTone'
-  | 'category'
-  | 'color'
-  | 'brand'
-  | 'sourceUrl'
->;
+export type ClothingInput = Partial<Pick<ClothingItem, 'name'>> &
+  Pick<
+    ClothingItem,
+    | 'imageUri'
+    | 'placeholderTone'
+    | 'category'
+    | 'color'
+    | 'brand'
+    | 'purchaseDate'
+    | 'notes'
+    | 'source'
+  >;

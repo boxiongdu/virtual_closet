@@ -1,10 +1,13 @@
 export const colors = {
   background: '#F6F3ED',
+  archiveBackground: '#F8F6F1',
   surface: '#FFFCF7',
   text: '#171717',
   textMuted: '#77736C',
   border: '#DDD8CF',
   accent: '#7E2F28',
+  memoryAccent: '#E6AF00',
+  memoryArchived: '#E6C875',
   imageOverlay: 'rgba(17, 17, 17, 0.68)',
   placeholderStone: '#D8D2C8',
   placeholderTaupe: '#B6A99A',

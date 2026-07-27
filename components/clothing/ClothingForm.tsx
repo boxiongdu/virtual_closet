@@ -1,7 +1,9 @@
-import { router } from 'expo-router';
 import { useState } from 'react';
 import {
+  Alert,
+  Image,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -12,24 +14,24 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {
-  addClothing,
-  updateClothing,
-} from '../../features/clothing/clothing.store';
+import { updateClothing } from '../../features/clothing/clothing.store';
 import {
   clothingCategories,
-  placeholderTones,
   type ClothingCategory,
   type ClothingInput,
   type ClothingItem,
   type PlaceholderTone,
 } from '../../features/clothing/clothing.types';
+import {
+  pickOutfitImage,
+  type OutfitImageSource,
+} from '../../features/outfit/outfit.capture';
 import { colors, fontSizes, lineHeights, radii, spacing } from '../../lib/theme';
 
 type ClothingFormProps = {
-  item?: ClothingItem;
-  onCancel?: () => void;
-  onSaved?: () => void;
+  item: ClothingItem;
+  onCancel: () => void;
+  onSaved: () => void;
 };
 
 const toneColors: Record<PlaceholderTone, string> = {
@@ -43,26 +45,71 @@ function formatCategory(category: ClothingCategory) {
   return category.replace('_', ' ');
 }
 
+function getSourceUrl(item: ClothingItem) {
+  if (item.source.type === 'taobao') {
+    return item.source.resolvedUrl ?? item.source.originalUrl;
+  }
+
+  return item.source.type === 'url' ? item.source.url : undefined;
+}
+
 export function ClothingForm({
   item,
   onCancel,
   onSaved,
 }: ClothingFormProps) {
-  const [imageUri, setImageUri] = useState(item?.imageUri ?? '');
-  const [placeholderTone, setPlaceholderTone] = useState<PlaceholderTone>(
-    item?.placeholderTone ?? 'stone',
-  );
-  const [category, setCategory] = useState<ClothingCategory>(
-    item?.category ?? 'top',
-  );
-  const [color, setColor] = useState(item?.color ?? '');
-  const [brand, setBrand] = useState(item?.brand ?? '');
-  const [sourceUrl, setSourceUrl] = useState(item?.sourceUrl ?? '');
+  const [imageUri, setImageUri] = useState(item.imageUri);
+  const [name, setName] = useState(item.name);
+  const [category, setCategory] = useState(item.category);
+  const [color, setColor] = useState(item.color);
+  const [brand, setBrand] = useState(item.brand ?? '');
+  const [purchaseDate, setPurchaseDate] = useState(item.purchaseDate ?? '');
+  const [notes, setNotes] = useState(item.notes ?? '');
+  const [isOpeningImage, setIsOpeningImage] = useState(false);
   const [error, setError] = useState('');
+  const sourceUrl = getSourceUrl(item);
+  const sourceLabel = item.source.type === 'photo' ? 'Photo' : 'Taobao';
+
+  const replaceImage = async (source: OutfitImageSource) => {
+    if (isOpeningImage) {
+      return;
+    }
+
+    setIsOpeningImage(true);
+    try {
+      const nextImageUri = await pickOutfitImage(source);
+      if (nextImageUri) {
+        setImageUri(nextImageUri);
+      }
+    } catch (pickerError) {
+      Alert.alert(
+        'Unable to open photos',
+        pickerError instanceof Error
+          ? pickerError.message
+          : 'Please try again.',
+      );
+    } finally {
+      setIsOpeningImage(false);
+    }
+  };
+
+  const showImageOptions = () => {
+    Alert.alert('Replace garment image', undefined, [
+      {
+        text: 'Take Photo',
+        onPress: () => void replaceImage('camera'),
+      },
+      {
+        text: 'Choose from Album',
+        onPress: () => void replaceImage('library'),
+      },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
 
   const handleSave = () => {
-    if (!color.trim()) {
-      setError('Enter a color before saving.');
+    if (!name.trim()) {
+      setError('Enter a name before saving.');
       return;
     }
 
@@ -71,30 +118,27 @@ export function ClothingForm({
       category,
       color,
       imageUri,
-      placeholderTone,
-      sourceUrl,
+      name,
+      notes,
+      placeholderTone: item.placeholderTone,
+      purchaseDate,
+      source: item.source,
     };
 
-    if (item) {
-      updateClothing(item.id, input);
-      onSaved?.();
-      return;
-    }
-
-    const createdItem = addClothing(input);
-    router.replace({
-      pathname: '/clothing/[id]',
-      params: { id: createdItem.id },
-    });
+    updateClothing(item.id, input);
+    onSaved();
   };
 
-  const handleCancel = () => {
-    if (onCancel) {
-      onCancel();
+  const openSource = async () => {
+    if (!sourceUrl) {
       return;
     }
 
-    router.back();
+    try {
+      await Linking.openURL(sourceUrl);
+    } catch {
+      Alert.alert('Unable to open source', 'Please try again later.');
+    }
   };
 
   return (
@@ -108,114 +152,143 @@ export function ClothingForm({
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.header}>
-            <Text style={styles.eyebrow}>
-              {item ? 'Edit garment' : 'New garment'}
-            </Text>
-            <Text style={styles.title}>
-              {item ? 'Update clothing' : 'Add clothing'}
-            </Text>
+          <View style={styles.topBar}>
+            <Pressable
+              accessibilityLabel="Cancel editing"
+              accessibilityRole="button"
+              onPress={onCancel}
+              style={styles.backButton}
+            >
+              <Text style={styles.backLabel}>←</Text>
+            </Pressable>
+            <Text style={styles.eyebrow}>Update archive piece</Text>
           </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Image placeholder</Text>
-            <View style={styles.toneRow}>
-              {placeholderTones.map((tone) => {
-                const selected = placeholderTone === tone;
-
-                return (
-                  <Pressable
-                    accessibilityLabel={`${tone} image placeholder`}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected }}
-                    key={tone}
-                    onPress={() => setPlaceholderTone(tone)}
-                    style={[
-                      styles.tone,
-                      { backgroundColor: toneColors[tone] },
-                      selected && styles.toneSelected,
-                    ]}
-                  />
-                );
-              })}
+          <Pressable
+            accessibilityHint="Opens camera and album options"
+            accessibilityLabel="Replace garment image"
+            accessibilityRole="button"
+            disabled={isOpeningImage}
+            onPress={showImageOptions}
+            style={styles.imageArea}
+          >
+            {imageUri ? (
+              <Image
+                resizeMode="cover"
+                source={{ uri: imageUri }}
+                style={styles.image}
+              />
+            ) : (
+              <View
+                style={[
+                  styles.image,
+                  {
+                    backgroundColor: toneColors[item.placeholderTone],
+                  },
+                ]}
+              />
+            )}
+            <View style={styles.imageAction}>
+              <Text style={styles.imageActionLabel}>
+                {isOpeningImage ? 'Opening…' : 'Tap to replace'}
+              </Text>
             </View>
-            <TextInput
-              autoCapitalize="none"
-              keyboardType="url"
-              onChangeText={setImageUri}
-              placeholder="Or paste an image URI"
-              placeholderTextColor={colors.textMuted}
-              style={styles.input}
-              value={imageUri}
+          </Pressable>
+
+          <View style={styles.fields}>
+            <ArchiveInput
+              label="Name"
+              onChangeText={(value) => {
+                setName(value);
+                setError('');
+              }}
+              placeholder="Item name"
+              value={name}
             />
-          </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Category</Text>
-            <View style={styles.optionRow}>
-              {clothingCategories.map((option) => {
-                const selected = category === option;
+            <View style={styles.field}>
+              <Text style={styles.label}>Category</Text>
+              <View style={styles.categoryRow}>
+                {clothingCategories.map((option) => {
+                  const selected = category === option;
 
-                return (
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityState={{ selected }}
-                    key={option}
-                    onPress={() => setCategory(option)}
-                    style={[
-                      styles.option,
-                      selected && styles.optionSelected,
-                    ]}
-                  >
-                    <Text
+                  return (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityState={{ selected }}
+                      key={option}
+                      onPress={() => setCategory(option)}
                       style={[
-                        styles.optionText,
-                        selected && styles.optionTextSelected,
+                        styles.category,
+                        selected && styles.categorySelected,
                       ]}
                     >
-                      {formatCategory(option)}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+                      <Text
+                        style={[
+                          styles.categoryLabel,
+                          selected && styles.categoryLabelSelected,
+                        ]}
+                      >
+                        {formatCategory(option)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
             </View>
-          </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Color</Text>
-            <TextInput
-              autoCapitalize="words"
+            <ArchiveInput
+              label="Color"
               onChangeText={setColor}
-              placeholder="e.g. Charcoal"
-              placeholderTextColor={colors.textMuted}
-              style={styles.input}
+              placeholder="Color"
               value={color}
             />
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Brand · optional</Text>
-            <TextInput
-              autoCapitalize="words"
+            <ArchiveInput
+              label="Brand"
               onChangeText={setBrand}
-              placeholder="Brand"
-              placeholderTextColor={colors.textMuted}
-              style={styles.input}
+              placeholder="Brand · optional"
               value={brand}
             />
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Source URL · optional</Text>
-            <TextInput
+            <ArchiveInput
               autoCapitalize="none"
-              keyboardType="url"
-              onChangeText={setSourceUrl}
-              placeholder="https://"
-              placeholderTextColor={colors.textMuted}
-              style={styles.input}
-              value={sourceUrl}
+              label="Purchase date"
+              onChangeText={setPurchaseDate}
+              placeholder="MM.DD.YYYY"
+              value={purchaseDate}
             />
+
+            <View style={styles.sourceSection}>
+              <View style={styles.sourceRow}>
+                <Text style={styles.label}>Source type</Text>
+                <Text style={styles.sourceValue}>{sourceLabel}</Text>
+              </View>
+              <Text style={styles.label}>Source URL</Text>
+              <Text numberOfLines={2} style={styles.sourceUrl}>
+                {sourceUrl ?? '—'}
+              </Text>
+              {sourceUrl ? (
+                <Pressable
+                  accessibilityRole="link"
+                  onPress={() => void openSource()}
+                  style={styles.openSource}
+                >
+                  <Text style={styles.openSourceLabel}>Open Source ↗</Text>
+                </Pressable>
+              ) : null}
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Notes · optional</Text>
+              <TextInput
+                multiline
+                onChangeText={setNotes}
+                placeholder="A memory, material, or styling note"
+                placeholderTextColor={colors.textMuted}
+                style={[styles.input, styles.notesInput]}
+                textAlignVertical="top"
+                value={notes}
+              />
+            </View>
           </View>
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -223,17 +296,17 @@ export function ClothingForm({
           <View style={styles.actions}>
             <Pressable
               accessibilityRole="button"
-              onPress={handleCancel}
-              style={styles.secondaryButton}
+              onPress={onCancel}
+              style={styles.cancelButton}
             >
-              <Text style={styles.secondaryButtonText}>Cancel</Text>
+              <Text style={styles.cancelLabel}>Cancel</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
               onPress={handleSave}
-              style={styles.primaryButton}
+              style={styles.saveButton}
             >
-              <Text style={styles.primaryButtonText}>Save</Text>
+              <Text style={styles.saveLabel}>Save</Text>
             </Pressable>
           </View>
         </ScrollView>
@@ -242,43 +315,104 @@ export function ClothingForm({
   );
 }
 
+type ArchiveInputProps = {
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  label: string;
+  onChangeText: (value: string) => void;
+  placeholder: string;
+  value: string;
+};
+
+function ArchiveInput({
+  autoCapitalize = 'words',
+  label,
+  onChangeText,
+  placeholder,
+  value,
+}: ArchiveInputProps) {
+  return (
+    <View style={styles.field}>
+      <Text style={styles.label}>{label}</Text>
+      <TextInput
+        autoCapitalize={autoCapitalize}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor={colors.textMuted}
+        style={styles.input}
+        value={value}
+      />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   safeArea: {
+    backgroundColor: colors.archiveBackground,
     flex: 1,
-    backgroundColor: colors.background,
   },
   flex: {
     flex: 1,
   },
   content: {
     paddingBottom: spacing['3xl'],
-    paddingHorizontal: spacing.xl,
   },
-  header: {
-    paddingBottom: spacing['2xl'],
-    paddingTop: spacing['3xl'],
+  topBar: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
+  },
+  backButton: {
+    justifyContent: 'center',
+    minHeight: 44,
+    minWidth: 44,
+  },
+  backLabel: {
+    color: colors.text,
+    fontSize: fontSizes.subtitle,
+    lineHeight: lineHeights.subtitle,
   },
   eyebrow: {
     color: colors.textMuted,
     fontSize: fontSizes.caption,
     fontWeight: '600',
-    letterSpacing: 1.4,
+    letterSpacing: 1.2,
     lineHeight: lineHeights.caption,
-    marginBottom: spacing.sm,
     textTransform: 'uppercase',
   },
-  title: {
+  imageArea: {
+    aspectRatio: 0.82,
+    width: '100%',
+  },
+  image: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  imageAction: {
+    backgroundColor: 'rgba(248, 246, 241, 0.78)',
+    bottom: 0,
+    left: 0,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    position: 'absolute',
+  },
+  imageActionLabel: {
     color: colors.text,
-    fontSize: fontSizes.title,
-    fontWeight: '400',
-    letterSpacing: -1.2,
-    lineHeight: lineHeights.title,
+    fontSize: fontSizes.caption,
+    fontWeight: '600',
+    letterSpacing: 1,
+    lineHeight: lineHeights.caption,
+    textTransform: 'uppercase',
+  },
+  fields: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing['2xl'],
   },
   field: {
     marginBottom: spacing.xl,
   },
   label: {
-    color: colors.text,
+    color: colors.textMuted,
     fontSize: fontSizes.caption,
     fontWeight: '600',
     letterSpacing: 1,
@@ -287,49 +421,70 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   input: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radii.sm,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.text,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     color: colors.text,
     fontSize: fontSizes.body,
-    minHeight: 52,
-    paddingHorizontal: spacing.lg,
+    lineHeight: lineHeights.body,
+    minHeight: 44,
+    paddingVertical: spacing.sm,
   },
-  toneRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginBottom: spacing.md,
+  notesInput: {
+    minHeight: 104,
   },
-  tone: {
-    borderColor: colors.border,
-    borderRadius: radii.sm,
-    borderWidth: StyleSheet.hairlineWidth,
-    height: 56,
-    width: 56,
-  },
-  toneSelected: {
-    borderColor: colors.accent,
-    borderWidth: 2,
-  },
-  optionRow: {
+  categoryRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
   },
-  option: {
-    backgroundColor: colors.surface,
+  category: {
     borderColor: colors.border,
     borderRadius: radii.pill,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
   },
-  optionSelected: {
+  categorySelected: {
     backgroundColor: colors.text,
     borderColor: colors.text,
   },
-  optionText: {
+  categoryLabel: {
+    color: colors.text,
+    fontSize: fontSizes.caption,
+    fontWeight: '600',
+    letterSpacing: 0.7,
+    lineHeight: lineHeights.caption,
+    textTransform: 'uppercase',
+  },
+  categoryLabelSelected: {
+    color: colors.surface,
+  },
+  sourceSection: {
+    marginBottom: spacing['2xl'],
+  },
+  sourceRow: {
+    alignItems: 'baseline',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  sourceValue: {
+    color: colors.text,
+    fontSize: fontSizes.body,
+    lineHeight: lineHeights.body,
+    textTransform: 'uppercase',
+  },
+  sourceUrl: {
+    color: colors.textMuted,
+    fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
+  },
+  openSource: {
+    alignSelf: 'flex-start',
+    marginTop: spacing.md,
+    minHeight: 36,
+    justifyContent: 'center',
+  },
+  openSourceLabel: {
     color: colors.text,
     fontSize: fontSizes.caption,
     fontWeight: '600',
@@ -337,45 +492,42 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.caption,
     textTransform: 'uppercase',
   },
-  optionTextSelected: {
-    color: colors.surface,
-  },
   error: {
     color: colors.accent,
     fontSize: fontSizes.caption,
     lineHeight: lineHeights.caption,
     marginBottom: spacing.lg,
+    paddingHorizontal: spacing.xl,
   },
   actions: {
     flexDirection: 'row',
     gap: spacing.md,
-  },
-  primaryButton: {
-    alignItems: 'center',
-    backgroundColor: colors.text,
-    borderRadius: radii.pill,
-    flex: 1,
-    minHeight: 52,
-    justifyContent: 'center',
     paddingHorizontal: spacing.xl,
   },
-  primaryButtonText: {
-    color: colors.surface,
-    fontSize: fontSizes.body,
-    fontWeight: '600',
-  },
-  secondaryButton: {
+  cancelButton: {
     alignItems: 'center',
     borderColor: colors.border,
     borderRadius: radii.pill,
     borderWidth: StyleSheet.hairlineWidth,
     flex: 1,
-    minHeight: 52,
     justifyContent: 'center',
-    paddingHorizontal: spacing.xl,
+    minHeight: 52,
   },
-  secondaryButtonText: {
+  cancelLabel: {
     color: colors.text,
+    fontSize: fontSizes.body,
+    fontWeight: '600',
+  },
+  saveButton: {
+    alignItems: 'center',
+    backgroundColor: colors.text,
+    borderRadius: radii.pill,
+    flex: 1,
+    justifyContent: 'center',
+    minHeight: 52,
+  },
+  saveLabel: {
+    color: colors.surface,
     fontSize: fontSizes.body,
     fontWeight: '600',
   },

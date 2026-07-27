@@ -1,5 +1,14 @@
-import { ClothingForm } from '../../components/clothing/ClothingForm';
+import { useLocalSearchParams } from 'expo-router';
+
+import { ClothingArchiveConfirmation } from '../../components/clothing/ClothingArchiveConfirmation';
 
 export default function NewClothingScreen() {
-  return <ClothingForm />;
+  const { imageUri } = useLocalSearchParams<{ imageUri?: string }>();
+
+  return (
+    <ClothingArchiveConfirmation
+      imageUri={imageUri}
+      source={{ type: 'photo' }}
+    />
+  );
 }

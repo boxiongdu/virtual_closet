@@ -1,65 +1,106 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { OutfitCaptureButton } from '../../components/outfit/OutfitCaptureButton';
-import { OutfitThumbnail } from '../../components/outfit/OutfitThumbnail';
-import { useOutfits } from '../../features/outfit/outfit.store';
+import { LookCanvas } from '../../components/outfit/LookCanvas';
+import { OutfitCaptureSheet } from '../../components/outfit/OutfitCaptureSheet';
+import {
+  LookDateSelector,
+  toDateKey,
+} from '../../components/outfit/LookDateSelector';
+import { getLookNumber } from '../../features/outfit/outfit.logic';
+import { useOutfitStore } from '../../features/outfit/outfit.store';
 import { colors, fontSizes, lineHeights, spacing } from '../../lib/theme';
 
 export default function TodayScreen() {
-  const recentOutfits = useOutfits().slice(0, 3);
+  const { isHydrated, outfits } = useOutfitStore();
+  const [isCaptureOpen, setIsCaptureOpen] = useState(false);
+  const dates = useMemo(
+    () =>
+      Array.from({ length: 22 }, (_, index) => {
+        const date = new Date();
+        date.setHours(12, 0, 0, 0);
+        date.setDate(date.getDate() + index - 14);
+        return date;
+      }),
+    [],
+  );
+  const [selectedDate, setSelectedDate] = useState(toDateKey(new Date()));
+  const selectedDateValue =
+    dates.find((date) => toDateKey(date) === selectedDate) ?? new Date();
+  const selectedOutfit = outfits.find(
+    (outfit) => outfit.date === selectedDate,
+  );
+  const dateLabel = formatArchiveDate(selectedDateValue);
+  const lookNumber = selectedOutfit
+    ? getLookNumber(outfits, selectedOutfit.id)
+    : undefined;
 
   return (
     <SafeAreaView edges={['top']} style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>Personal style journal</Text>
-          <Text style={styles.title}>Today’s Look</Text>
-        </View>
-
-        <OutfitCaptureButton />
-
-        <View style={styles.recentSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent looks</Text>
-            <Text style={styles.sectionIndex}>
-              {String(recentOutfits.length).padStart(2, '0')}
-            </Text>
+          <Text style={styles.eyebrow}>Personal lookbook</Text>
+          <View style={styles.headerRow}>
+            <Text style={styles.title}>LOOKS</Text>
+            <View style={styles.dateNavigation}>
+              <LookDateSelector
+                dates={dates}
+                onSelectDate={setSelectedDate}
+                outfitDates={new Set(outfits.map((outfit) => outfit.date))}
+                selectedDate={selectedDate}
+              />
+            </View>
           </View>
-          {recentOutfits.length ? (
-            <ScrollView
-              contentContainerStyle={styles.recentRow}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-            >
-              {recentOutfits.map((outfit) => (
-                <OutfitThumbnail archive key={outfit.id} outfit={outfit} />
-              ))}
-            </ScrollView>
-          ) : (
-            <Text style={styles.emptyText}>Your style story starts here.</Text>
-          )}
         </View>
-      </ScrollView>
+
+        <LookCanvas
+          dateLabel={dateLabel}
+          isLoading={!isHydrated}
+          lookNumber={lookNumber}
+          onCapture={() => setIsCaptureOpen(true)}
+          outfit={selectedOutfit}
+        />
+      </View>
+
+      <OutfitCaptureSheet
+        date={selectedDate}
+        onClose={() => setIsCaptureOpen(false)}
+        visible={isCaptureOpen}
+      />
     </SafeAreaView>
   );
+}
+
+function formatArchiveDate(date: Date) {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${month}.${day}.${date.getFullYear()}`;
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.archiveBackground,
   },
   content: {
-    paddingBottom: spacing['4xl'] * 2,
-    paddingHorizontal: spacing.xl,
+    flex: 1,
+    paddingBottom: spacing['4xl'] + spacing['2xl'],
   },
   header: {
-    paddingBottom: spacing['2xl'],
-    paddingTop: spacing['3xl'],
+    paddingBottom: spacing.xs,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.lg,
+  },
+  headerRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  dateNavigation: {
+    flex: 1,
+    height: spacing['3xl'],
   },
   eyebrow: {
     color: colors.textMuted,
@@ -67,47 +108,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 1.4,
     lineHeight: lineHeights.caption,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
     textTransform: 'uppercase',
   },
   title: {
     color: colors.text,
     fontSize: fontSizes.title,
-    fontWeight: '400',
-    letterSpacing: -1.2,
+    fontWeight: '700',
+    letterSpacing: -2,
     lineHeight: lineHeights.title,
-  },
-  recentSection: {
-    paddingTop: spacing['2xl'],
-  },
-  sectionHeader: {
-    alignItems: 'center',
-    borderBottomColor: colors.border,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  sectionTitle: {
-    color: colors.text,
-    fontSize: fontSizes.caption,
-    fontWeight: '600',
-    letterSpacing: 1.2,
-    lineHeight: lineHeights.caption,
-    textTransform: 'uppercase',
-  },
-  sectionIndex: {
-    color: colors.textMuted,
-    fontSize: fontSizes.caption,
-    lineHeight: lineHeights.caption,
-  },
-  recentRow: {
-    gap: spacing.sm,
-  },
-  emptyText: {
-    color: colors.textMuted,
-    fontSize: fontSizes.body,
-    lineHeight: lineHeights.body,
   },
 });

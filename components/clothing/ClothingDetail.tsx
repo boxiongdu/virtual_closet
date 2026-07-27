@@ -1,21 +1,29 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   Alert,
+  Animated,
   Image,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 
 import {
   archiveClothing,
   deleteClothing,
   useClothingItem,
 } from '../../features/clothing/clothing.store';
-import type { PlaceholderTone } from '../../features/clothing/clothing.types';
+import type {
+  ClothingItem,
+  PlaceholderTone,
+} from '../../features/clothing/clothing.types';
+import { getClothingLinkSource } from '../../features/clothing/clothing.url';
 import { colors, fontSizes, lineHeights, radii, spacing } from '../../lib/theme';
 import { ClothingForm } from './ClothingForm';
 
@@ -34,10 +42,36 @@ function formatCategory(category: string) {
   return category.replace('_', ' ');
 }
 
+function formatItemNumber(id: string) {
+  const numericId = Number.parseInt(id, 10);
+  return Number.isNaN(numericId)
+    ? id.toUpperCase()
+    : String(numericId).padStart(3, '0');
+}
+
+function formatSource(item: ClothingItem) {
+  if (item.source.type === 'taobao') {
+    return (
+      getClothingLinkSource(
+        item.source.resolvedUrl ?? item.source.originalUrl,
+      ) ?? 'Taobao'
+    );
+  }
+
+  if (item.source.type === 'url') {
+    return 'Link';
+  }
+
+  return 'Photo';
+}
+
 export function ClothingDetail({ id }: ClothingDetailProps) {
   const item = useClothingItem(id);
+  const insets = useSafeAreaInsets();
   const [isEditing, setIsEditing] = useState(false);
+  const [isInformationVisible, setIsInformationVisible] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const informationProgress = useRef(new Animated.Value(0)).current;
 
   if (!item) {
     return (
@@ -85,6 +119,15 @@ export function ClothingDetail({ id }: ClothingDetailProps) {
     );
   };
 
+  const setInformationVisible = (visible: boolean) => {
+    setIsInformationVisible(visible);
+    Animated.timing(informationProgress, {
+      duration: 320,
+      toValue: visible ? 1 : 0,
+      useNativeDriver: true,
+    }).start();
+  };
+
   return (
     <View style={styles.container}>
       {item.imageUri ? (
@@ -99,12 +142,25 @@ export function ClothingDetail({ id }: ClothingDetailProps) {
             styles.image,
             { backgroundColor: toneColors[item.placeholderTone] },
           ]}
-        >
-          <Text style={styles.imageNumber}>{item.id}</Text>
-        </View>
+        />
       )}
 
-      <SafeAreaView edges={['top', 'bottom']} style={styles.overlay}>
+      <Pressable
+        accessibilityLabel={
+          isInformationVisible
+            ? 'Hide clothing information'
+            : 'Reveal clothing information'
+        }
+        accessibilityRole="button"
+        onPress={() => setInformationVisible(!isInformationVisible)}
+        style={StyleSheet.absoluteFill}
+      />
+
+      <SafeAreaView
+        edges={['top']}
+        pointerEvents="box-none"
+        style={styles.overlay}
+      >
         <View style={styles.topBar}>
           <Pressable
             accessibilityLabel="Back to closet"
@@ -154,17 +210,47 @@ export function ClothingDetail({ id }: ClothingDetailProps) {
           </View>
         </View>
 
-        <View style={styles.information}>
-          <Text style={styles.title}>{item.name}</Text>
-          <View style={styles.details}>
-            <DetailRow
-              label="Category"
-              value={formatCategory(item.category)}
-            />
-            <DetailRow label="Color" value={item.color} />
-            <DetailRow label="Brand" value={item.brand ?? '—'} />
-          </View>
-        </View>
+        <Animated.View
+          pointerEvents={isInformationVisible ? 'auto' : 'none'}
+          style={[
+            styles.information,
+            {
+              opacity: informationProgress,
+              transform: [
+                {
+                  translateY: informationProgress.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [160, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <Pressable
+            accessibilityLabel="Hide clothing information"
+            accessibilityRole="button"
+            onPress={() => setInformationVisible(false)}
+            style={[
+              styles.informationContent,
+              { paddingBottom: spacing.xl + insets.bottom },
+            ]}
+          >
+            <Text style={styles.archiveLabel}>
+              ITEM No.{formatItemNumber(item.id)}
+            </Text>
+            <Text style={styles.title}>{item.name}</Text>
+            <View style={styles.details}>
+              <DetailRow
+                label="Category"
+                value={formatCategory(item.category)}
+              />
+              <DetailRow label="Color" value={item.color || '—'} />
+              <DetailRow label="Brand" value={item.brand ?? '—'} />
+              <DetailRow label="Source" value={formatSource(item)} />
+            </View>
+          </Pressable>
+        </Animated.View>
       </SafeAreaView>
     </View>
   );
@@ -195,34 +281,26 @@ const styles = StyleSheet.create({
   },
   image: {
     ...StyleSheet.absoluteFillObject,
-    padding: spacing.xl,
-  },
-  imageNumber: {
-    color: colors.text,
-    fontSize: fontSizes.subtitle,
-    lineHeight: lineHeights.subtitle,
   },
   overlay: {
     flex: 1,
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
+    paddingTop: spacing.lg,
     width: '100%',
   },
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
     zIndex: 2,
   },
   roundButton: {
     alignItems: 'center',
-    backgroundColor: colors.imageOverlay,
-    borderColor: 'rgba(255, 252, 247, 0.28)',
+    backgroundColor: 'rgba(23, 23, 23, 0.56)',
     borderRadius: radii.pill,
-    borderWidth: StyleSheet.hairlineWidth,
-    height: 48,
+    height: 44,
     justifyContent: 'center',
-    width: 48,
+    width: 44,
   },
   roundButtonLabel: {
     color: colors.surface,
@@ -241,9 +319,6 @@ const styles = StyleSheet.create({
   },
   menu: {
     backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    borderWidth: StyleSheet.hairlineWidth,
     marginTop: spacing.sm,
     overflow: 'hidden',
     width: 152,
@@ -268,16 +343,28 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.body,
   },
   information: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.imageOverlay,
-    borderRadius: radii.md,
-    maxWidth: '92%',
-    padding: spacing.lg,
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(248, 246, 241, 0.26)',
+  },
+  informationContent: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xl,
+  },
+  archiveLabel: {
+    color: colors.textMuted,
+    fontSize: fontSizes.caption,
+    fontWeight: '600',
+    letterSpacing: 1.2,
+    lineHeight: lineHeights.caption,
+    marginBottom: spacing.sm,
+    textTransform: 'uppercase',
   },
   title: {
-    color: colors.surface,
+    color: colors.text,
     fontSize: fontSizes.action,
-    fontWeight: '400',
+    fontWeight: '500',
     letterSpacing: -0.8,
     lineHeight: lineHeights.action,
   },
@@ -288,17 +375,17 @@ const styles = StyleSheet.create({
   detailRow: {
     alignItems: 'baseline',
     flexDirection: 'row',
-    gap: spacing.sm,
   },
   detailLabel: {
-    color: colors.border,
+    color: colors.textMuted,
     fontSize: fontSizes.caption,
     letterSpacing: 1,
     lineHeight: lineHeights.caption,
     textTransform: 'uppercase',
+    width: 96,
   },
   detailValue: {
-    color: colors.surface,
+    color: colors.text,
     fontSize: fontSizes.caption,
     lineHeight: lineHeights.caption,
     textTransform: 'capitalize',

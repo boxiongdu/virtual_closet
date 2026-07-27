@@ -75,26 +75,34 @@ The goal is minimal friction.
 
 Example:
 
-             Today's Look
+------------------------------------------------
+
+                July 26
 
 
-          +-----------+
+     <  July 24   July 25   July 26   >
 
-          |           |
-          |           |
-          |    +      |
-          |           |
-          | Take Photo|
-          |           |
-          |           |
 
-          +-----------+
+------------------------------------------------
 
-Recent Looks
 
-[photo] [photo] [photo]
+              TODAY'S LOOK
 
-    Today Mode / Calendar Mode Toggle
+
+        ┌──────────────────┐
+        │                  │
+        │                  │
+        │                  │
+        │       +          │
+        │                  │
+        │                  │
+        └──────────────────┘
+
+
+          Add today's outfit
+
+
+------------------------------------------------
 
 ---
 

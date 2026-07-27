@@ -20,9 +20,6 @@ export default function OutfitDetailScreen() {
         <View>
           <OutfitThumbnail outfit={outfit} />
           <Text style={styles.date}>{outfit.date}</Text>
-          {outfit.caption ? (
-            <Text style={styles.caption}>{outfit.caption}</Text>
-          ) : null}
         </View>
       ) : (
         <Text style={styles.caption}>Outfit not found</Text>

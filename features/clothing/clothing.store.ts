@@ -5,59 +5,8 @@ import type {
   ClothingItem,
 } from './clothing.types';
 
-const initialItems: ClothingItem[] = [
-  {
-    id: '01',
-    name: 'Essential Shirt',
-    placeholderTone: 'stone',
-    category: 'top',
-    color: 'Ivory',
-    archived: false,
-  },
-  {
-    id: '02',
-    name: 'Wool Overshirt',
-    placeholderTone: 'taupe',
-    category: 'outerwear',
-    color: 'Taupe',
-    archived: false,
-  },
-  {
-    id: '03',
-    name: 'Wide-Leg Trouser',
-    placeholderTone: 'ink',
-    category: 'bottom',
-    color: 'Black',
-    archived: false,
-  },
-  {
-    id: '04',
-    name: 'Everyday Knit',
-    placeholderTone: 'clay',
-    category: 'top',
-    color: 'Clay',
-    archived: false,
-  },
-  {
-    id: '05',
-    name: 'Long Coat',
-    placeholderTone: 'taupe',
-    category: 'outerwear',
-    color: 'Camel',
-    archived: false,
-  },
-  {
-    id: '06',
-    name: 'Leather Loafer',
-    placeholderTone: 'ink',
-    category: 'shoes',
-    color: 'Black',
-    archived: false,
-  },
-];
-
-let items = initialItems;
-let nextId = initialItems.length + 1;
+let items: ClothingItem[] = [];
+let nextId = 1;
 const listeners = new Set<() => void>();
 
 function emitChange() {
@@ -74,6 +23,11 @@ function getSnapshot() {
 }
 
 function createName(input: ClothingInput) {
+  const customName = input.name?.trim();
+  if (customName) {
+    return customName;
+  }
+
   const categoryName = input.category.replace('_', ' ');
   const descriptor = input.brand?.trim() || input.color.trim();
 
@@ -90,7 +44,8 @@ export function addClothing(input: ClothingInput) {
     id: String(nextId++).padStart(2, '0'),
     imageUri: input.imageUri?.trim() || undefined,
     name: createName(input),
-    sourceUrl: input.sourceUrl?.trim() || undefined,
+    notes: input.notes?.trim() || undefined,
+    purchaseDate: input.purchaseDate?.trim() || undefined,
     archived: false,
   };
 
@@ -114,7 +69,8 @@ export function updateClothing(id: string, input: ClothingInput) {
       color: input.color.trim(),
       imageUri: input.imageUri?.trim() || undefined,
       name: createName(input),
-      sourceUrl: input.sourceUrl?.trim() || undefined,
+      notes: input.notes?.trim() || undefined,
+      purchaseDate: input.purchaseDate?.trim() || undefined,
     };
 
     return updatedItem;
@@ -155,6 +111,12 @@ export function deleteClothing(id: string) {
 
 export function getClothingById(id: string) {
   return items.find((item) => item.id === id);
+}
+
+export function resetClothing() {
+  items = [];
+  nextId = 1;
+  emitChange();
 }
 
 export function useClothingItems() {

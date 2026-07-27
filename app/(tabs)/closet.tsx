@@ -1,51 +1,125 @@
-import { router } from 'expo-router';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { router, type Href } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ClothingCard } from '../../features/clothing/ClothingCard';
-import { useClothingItems } from '../../features/clothing/clothing.store';
-import type { ClothingItem } from '../../features/clothing/clothing.types';
+import { ClothingAddSheet } from '../../components/clothing/ClothingAddSheet';
+import { ClosetEmptyState } from '../../components/clothing/ClosetEmptyState';
 import {
-  colors,
-  fontSizes,
-  lineHeights,
-  radii,
-  spacing,
-} from '../../lib/theme';
+  ClothingCategoryFilter,
+  type ClosetFilter,
+} from '../../components/clothing/ClothingCategoryFilter';
+import { ClothingMasonryGallery } from '../../components/clothing/ClothingMasonryGallery';
+import { DeveloperBar } from '../../components/shared/DeveloperBar';
+import {
+  pickOutfitImage,
+  type OutfitImageSource,
+} from '../../features/outfit/outfit.capture';
+import { useClothingItems } from '../../features/clothing/clothing.store';
+import { colors, fontSizes, lineHeights, spacing } from '../../lib/theme';
 
 export default function ClosetScreen() {
+  const galleryRef = useRef<ScrollView>(null);
+  const isOpeningPicker = useRef(false);
+  const previousItemCount = useRef(0);
+  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+  const [filter, setFilter] = useState<ClosetFilter>('all');
   const clothingItems = useClothingItems();
   const activeItems = clothingItems.filter((item) => !item.archived);
-  const renderItem = ({ item }: { item: ClothingItem }) => (
-    <ClothingCard item={item} />
+  const visibleItems = activeItems.filter(
+    (item) => filter === 'all' || item.category === filter,
   );
+
+  useEffect(() => {
+    if (activeItems.length > previousItemCount.current) {
+      galleryRef.current?.scrollTo({ animated: true, y: 0 });
+    }
+    previousItemCount.current = activeItems.length;
+  }, [activeItems.length]);
+
+  const choosePhoto = async (source: OutfitImageSource) => {
+    if (isOpeningPicker.current) {
+      return;
+    }
+
+    isOpeningPicker.current = true;
+    try {
+      const imageUri = await pickOutfitImage(source);
+      if (imageUri) {
+        setIsAddSheetOpen(false);
+        router.push({
+          pathname: '/clothing/new',
+          params: { imageUri },
+        });
+      }
+    } catch (error) {
+      Alert.alert(
+        'Unable to open photos',
+        error instanceof Error ? error.message : 'Please try again.',
+      );
+    } finally {
+      isOpeningPicker.current = false;
+    }
+  };
 
   return (
     <SafeAreaView edges={['top']} style={styles.container}>
-      <FlatList
-        columnWrapperStyle={styles.row}
+      <ScrollView
         contentContainerStyle={styles.content}
-        data={activeItems}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={
-          <View style={styles.header}>
-            <View>
-              <Text style={styles.eyebrow}>Private wardrobe</Text>
-              <Text style={styles.title}>Closet</Text>
-            </View>
-            <Pressable
-              accessibilityLabel="Add clothing"
-              accessibilityRole="button"
-              onPress={() => router.push('/clothing/new')}
-              style={styles.addButton}
-            >
-              <Text style={styles.addButtonText}>＋</Text>
-            </Pressable>
-          </View>
-        }
-        numColumns={2}
-        renderItem={renderItem}
+        ref={galleryRef}
         showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.eyebrow}>Personal archive</Text>
+            <Text style={styles.title}>PRIVATE WARDROBE</Text>
+          </View>
+          <Pressable
+            accessibilityLabel="Add clothing"
+            accessibilityRole="button"
+            onPress={() => {
+              setFilter('all');
+              setIsAddSheetOpen(true);
+            }}
+            style={styles.addButton}
+          >
+            <Text style={styles.addButtonText}>＋</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.filters}>
+          <ClothingCategoryFilter onChange={setFilter} value={filter} />
+        </View>
+
+        {activeItems.length === 0 ? (
+          <ClosetEmptyState
+            onAdd={() => {
+              setFilter('all');
+              setIsAddSheetOpen(true);
+            }}
+          />
+        ) : (
+          <ClothingMasonryGallery items={visibleItems} />
+        )}
+
+        <DeveloperBar />
+      </ScrollView>
+      <ClothingAddSheet
+        onCamera={() => void choosePhoto('camera')}
+        onClose={() => setIsAddSheetOpen(false)}
+        onImportLink={() => {
+          setIsAddSheetOpen(false);
+          router.push('/clothing/import' as Href);
+        }}
+        onLibrary={() => void choosePhoto('library')}
+        visible={isAddSheetOpen}
       />
     </SafeAreaView>
   );
@@ -54,16 +128,16 @@ export default function ClosetScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.archiveBackground,
   },
   content: {
     paddingBottom: spacing['4xl'] * 2,
     paddingHorizontal: spacing.xl,
   },
   header: {
-    alignItems: 'flex-end',
-    paddingBottom: spacing['2xl'],
-    paddingTop: spacing['3xl'],
+    alignItems: 'center',
+    paddingBottom: spacing.xl,
+    paddingTop: spacing['2xl'],
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
@@ -78,26 +152,24 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: fontSizes.title,
-    fontWeight: '400',
-    letterSpacing: -1.2,
-    lineHeight: lineHeights.title,
+    fontSize: fontSizes.action,
+    fontWeight: '600',
+    letterSpacing: -1,
+    lineHeight: lineHeights.action,
   },
-  row: {
-    gap: spacing.lg,
-    marginBottom: spacing['2xl'],
+  filters: {
+    marginBottom: spacing.xl,
   },
   addButton: {
     alignItems: 'center',
-    backgroundColor: colors.text,
-    borderRadius: radii.pill,
-    height: 48,
+    height: 44,
     justifyContent: 'center',
-    width: 48,
+    width: 44,
   },
   addButtonText: {
-    color: colors.surface,
-    fontSize: fontSizes.subtitle,
-    lineHeight: lineHeights.subtitle,
+    color: colors.text,
+    fontSize: fontSizes.action,
+    fontWeight: '200',
+    lineHeight: lineHeights.action,
   },
 });
