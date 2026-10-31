@@ -3,6 +3,7 @@ import { useState } from 'react';
 import {
   Alert,
   Modal,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -14,6 +15,7 @@ import {
   pickOutfitImage,
   type OutfitImageSource,
 } from '../../features/outfit/outfit.capture';
+import { stageImageForNavigation } from '../../features/outfit/outfit.pending-image';
 import { colors, fontSizes, lineHeights, radii, spacing } from '../../lib/theme';
 
 type OutfitCaptureSheetProps = {
@@ -45,7 +47,7 @@ export function OutfitCaptureSheet({
       onClose();
       router.push({
         pathname: '/outfit/preview',
-        params: { date, imageUri },
+        params: { date, imageUri: stageImageForNavigation(imageUri) },
       });
     } catch (error) {
       Alert.alert(
@@ -75,21 +77,25 @@ export function OutfitCaptureSheet({
           <Text style={styles.eyebrow}>Save this look</Text>
           <Text style={styles.title}>Choose a photo source</Text>
 
-          <Pressable
-            accessibilityRole="button"
-            disabled={isOpening}
-            onPress={() => void handleSource('camera')}
-            style={styles.primaryAction}
-          >
-            <Text style={styles.primaryActionLabel}>Camera</Text>
-          </Pressable>
+          {Platform.OS !== 'web' ? (
+            <Pressable
+              accessibilityRole="button"
+              disabled={isOpening}
+              onPress={() => void handleSource('camera')}
+              style={styles.primaryAction}
+            >
+              <Text style={styles.primaryActionLabel}>Camera</Text>
+            </Pressable>
+          ) : null}
           <Pressable
             accessibilityRole="button"
             disabled={isOpening}
             onPress={() => void handleSource('library')}
             style={styles.secondaryAction}
           >
-            <Text style={styles.secondaryActionLabel}>Photo Library</Text>
+            <Text style={styles.secondaryActionLabel}>
+              {Platform.OS === 'web' ? 'Upload from Computer' : 'Photo Library'}
+            </Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
