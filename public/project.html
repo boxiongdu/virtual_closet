@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f7f4ed" />
+  <meta name="description" content="Virtual Closet: a private, image-first wardrobe diary built with React Native, TypeScript and Expo Router. Explore the live browser demo and case study." />
+  <title>Virtual Closet — Project by Boxiong Du</title>
+  <style>
+    :root { color-scheme:light; --paper:#f7f4ed; --ink:#1c1c1c; --muted:#77736c; --line:#d7d2c8; --gold:#e6af00; --canvas:#e9e4da; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height:1.55; }
+    a { color:inherit; }
+    .wrap { max-width:1150px; margin:0 auto; padding:0 clamp(20px,5vw,64px); }
+    header { border-bottom:1px solid var(--line); }
+    .nav { display:flex; justify-content:space-between; align-items:center; min-height:76px; gap:24px; }
+    .brand { font-weight:700; font-size:15px; letter-spacing:.16em; text-decoration:none; }
+    .nav-links { display:flex; gap:26px; align-items:center; font-size:13px; }
+    .nav-links a { text-decoration:none; }
+    .nav-links a:hover,.inline:hover { text-decoration:underline; text-underline-offset:4px; }
+    .eyebrow { font-size:11px; font-weight:700; letter-spacing:.19em; text-transform:uppercase; color:var(--muted); }
+    .hero { display:grid; grid-template-columns:1.15fr .85fr; align-items:center; gap:8vw; padding-block:100px 90px; }
+    h1 { max-width:720px; font-family:Georgia,"Times New Roman",serif; font-size:clamp(66px,8vw,118px); line-height:.94; font-weight:400; letter-spacing:-.064em; margin:28px 0; }
+    .lead { max-width:500px; color:#504e49; font-size:clamp(17px,2vw,20px); line-height:1.7; margin:0 0 28px; }
+    .actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:34px; }
+    .button { min-height:48px; padding:13px 24px; display:inline-flex; gap:12px; align-items:center; justify-content:center; text-decoration:none; font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; border:1px solid var(--ink); }
+    .primary { color:var(--paper); background:var(--ink); }
+    .secondary { background:transparent; }
+    .button:hover { transform:translateY(-1px); }
+    .editorial { aspect-ratio: .78; background:var(--canvas); padding:clamp(18px,3vw,36px); display:flex; flex-direction:column; justify-content:space-between; position:relative; overflow:hidden; border:1px solid var(--line); }
+    .editorial::before { content:""; position:absolute; width:64%; aspect-ratio:1; border-radius:50%; background:#d5c9b5; top:22%; left:19%; }
+    .editorial::after { content:""; position:absolute; width:45%; height:64%; border:1.5px solid #827768; border-radius:46% 46% 4% 4%; top:17%; left:28%; transform:rotate(-6deg); }
+    .editorial h2 { font-size:clamp(38px,4vw,59px); line-height:.94; font-family:Georgia,serif; letter-spacing:-.06em; font-weight:400; z-index:1; margin:0; }
+    .editorial .edition { color:#46433d; font-size:11px; font-weight:700; letter-spacing:.14em; z-index:1; }
+    .caption { font-size:11px; color:var(--muted); margin-top:10px; }
+    section { padding-block:75px; border-top:1px solid var(--line); }
+    h2.section-title { max-width:730px; font-family:Georgia,serif; font-weight:400; letter-spacing:-.035em; font-size:clamp(35px,4vw,59px); line-height:1.1; margin:20px 0 36px; }
+    .three { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
+    .feature { padding:24px 0; border-top:1px solid var(--ink); }
+    .feature span { font-size:12px; color:var(--muted); }
+    .feature h3 { font-family:Georgia,serif; font-size:30px; font-weight:400; margin:18px 0 12px; }
+    .feature p { font-size:15px; line-height:1.7; max-width:340px; color:#585650; margin:0; }
+    .details { display:grid; grid-template-columns: 1fr 1fr; gap:60px; }
+    .details p { max-width:470px; color:#504e49; font-size:16px; }
+    dl { display:grid; grid-template-columns:110px 1fr; gap:14px 24px; margin:0; font-size:14px; }
+    dt { color:var(--muted); }
+    dd { margin:0; }
+    .footer-cta { text-align:center; padding-block:90px 100px; }
+    .footer-cta h2 { font-family:Georgia,serif; font-size:clamp(45px,7vw,84px); line-height:1; letter-spacing:-.05em; font-weight:400; margin:14px auto 28px; }
+    .footer-cta .actions { justify-content:center; }
+    footer { border-top:1px solid var(--line); }
+    footer .wrap { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; padding-block:30px; font-size:12px; color:var(--muted); }
+    @media (max-width:760px) { .hero { grid-template-columns:1fr; gap:40px; padding-block:62px; } .editorial { max-width:460px; width:100%; aspect-ratio:1.05; } .three { grid-template-columns:1fr; } .details { grid-template-columns:1fr; gap:28px; } .nav-links { gap:14px; font-size:12px; } section { padding-block:52px; } }
+    @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } .button:hover { transform:none; } }
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="nav wrap" aria-label="Project navigation">
+      <a href="./project.html" class="brand">BX / SELECTED WORK</a>
+      <div class="nav-links"><a href="#overview">About</a><a href="https://github.com/boxiongdu/virtual_closet" target="_blank" rel="noopener noreferrer">Source ↗</a><a href="./">Open demo ↗</a></div>
+    </nav>
+  </header>
+  <main>
+    <div class="wrap hero">
+      <div>
+        <div class="eyebrow">Product design · Mobile engineering · 2026</div>
+        <h1>Your style,<br />remembered.</h1>
+        <p class="lead">Virtual Closet is a private, image-first fashion diary for capturing daily outfits, exploring a personal lookbook, and building a wardrobe archive over time.</p>
+        <div class="actions"><a class="button primary" href="./">Explore interactive demo ↗</a><a class="button secondary" href="https://github.com/boxiongdu/virtual_closet" target="_blank" rel="noopener noreferrer">View source code ↗</a></div>
+      </div>
+      <div>
+        <div class="editorial" role="img" aria-label="Abstract editorial-style illustration of a personal wardrobe archive; not an application screenshot">
+          <div class="edition">A PERSONAL FASHION ARCHIVE</div>
+          <h2>Looks.<br />Calendar.<br />Closet.</h2>
+          <div class="edition">VOL. 001 &nbsp; / &nbsp; VIRTUAL CLOSET</div>
+        </div>
+        <div class="caption">Editorial project illustration · not an app screenshot</div>
+      </div>
+    </div>
+    <section id="overview">
+      <div class="wrap">
+        <div class="eyebrow">01 / Product experience</div>
+        <h2 class="section-title">A simple daily action, a growing personal archive.</h2>
+        <div class="three">
+          <div class="feature"><span>01</span><h3>Looks</h3><p>Select a photo for a day, save the look, and revisit moments in an image-first diary.</p></div>
+          <div class="feature"><span>02</span><h3>Calendar</h3><p>Browse outfit memories by date in a visual history rather than a traditional log.</p></div>
+          <div class="feature"><span>03</span><h3>Closet</h3><p>Add garments with photos, categorize them, and browse an editorial wardrobe gallery.</p></div>
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="wrap details">
+        <div><div class="eyebrow">02 / Product decisions</div><h2 class="section-title">Built for low-friction journaling.</h2><p>The MVP prioritizes capturing an outfit in seconds. An image-first UI keeps the focus on personal style instead of inventory management. Clothing entries grow gradually alongside the daily diary.</p></div>
+        <div><div class="eyebrow">03 / Engineering</div><h2 class="section-title">One codebase, native and web.</h2><dl><dt>Frontend</dt><dd>Expo React Native · TypeScript · Expo Router</dd><dt>State</dt><dd>Local-first React stores and AsyncStorage</dd><dt>Images</dt><dd>Native file storage and browser-specific image handling</dd><dt>Build</dt><dd>GitHub Actions · Expo web export</dd><dt>Privacy</dt><dd>No user account or cloud photo upload in this demo</dd></dl><p style="font-size:13px;margin-top:28px">Demo note: local data belongs to the visitor's browser/device. The current browser version is an MVP; clothing entries may not survive a page refresh, and large photo archives are not supported yet.</p></div>
+      </div>
+    </section>
+    <div class="wrap footer-cta">
+      <div class="eyebrow">Experience the project</div>
+      <h2>Open the closet.</h2>
+      <p>Try the web version without installing an app or creating an account.</p>
+      <div class="actions"><a class="button primary" href="./">Launch browser demo ↗</a><a class="button secondary" href="https://github.com/boxiongdu/virtual_closet" target="_blank" rel="noopener noreferrer">Explore architecture ↗</a></div>
+    </div>
+  </main>
+  <footer><div class="wrap"><div>Virtual Closet · A project by Boxiong Du</div><div><a class="inline" href="https://www.linkedin.com/in/boxiong-du" target="_blank" rel="noopener noreferrer">LinkedIn</a> &nbsp;·&nbsp; <a class="inline" href="https://github.com/boxiongdu" target="_blank" rel="noopener noreferrer">GitHub</a></div></div></footer>
+</body>
+</html>
