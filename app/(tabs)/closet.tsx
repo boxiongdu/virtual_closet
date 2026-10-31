@@ -4,7 +4,6 @@ import {
   Alert,
   Pressable,
   ScrollView,
-  Platform,
   StyleSheet,
   Text,
   View,
