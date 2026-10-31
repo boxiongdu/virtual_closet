@@ -479,3 +479,18 @@ The developer can then use Expo Go or an installed iOS/Android simulator.
   Supabase, Docker, or new product features were added.
 - Scope remains focused on browser compatibility; live browser interaction,
   persistence under refresh, and desktop layouts must be validated separately.
+
+## 2026-10-31 — Browser photo upload path
+
+- Focused the browser milestone on selecting, previewing, saving, and displaying
+  a photo in Looks and selecting a photo in Closet; deferred wider persistence.
+- Added a short-lived image handoff for Expo Router navigation. Browser-selected
+  data URLs stay in module memory rather than being embedded in route URLs.
+- Relabeled browser photo options to Upload from Computer and hid the native
+  Camera action on web. Native camera and photo-library flows remain unchanged.
+- Downscaled web outfit photos to at most 1200px on the longest side and JPEG
+  quality 0.72 before saving via the interim AsyncStorage-backed image adapter.
+- Browser-selected previews are intentionally temporary; a refresh on a preview
+  route requires choosing the image again.
+- Added a browser upload smoke test to exercise the UI, not just web bundling.
+- No Supabase, IndexedDB, Docker, hosted release, or account functionality.
