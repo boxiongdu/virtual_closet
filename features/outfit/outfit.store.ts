@@ -1,13 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Directory, File, Paths } from 'expo-file-system';
 import { useEffect, useSyncExternalStore } from 'react';
 
+import { clearPreReleaseImages, deleteManagedImage, persistImage } from './outfit.images';
 import { upsertOutfitByDate } from './outfit.logic';
 import type { Outfit, OutfitInput } from './outfit.types';
 
 const storageKey = '@virtual-closet/outfits';
 const releaseCleanupKey = '@virtual-closet/release-v0.3-outfits-cleared';
-const outfitDirectory = new Directory(Paths.document, 'outfits');
 
 type OutfitSnapshot = {
   outfits: Outfit[];
@@ -57,13 +56,7 @@ async function clearPreReleaseOutfitsOnce() {
 
   await AsyncStorage.removeItem(storageKey);
 
-  if (outfitDirectory.exists) {
-    try {
-      outfitDirectory.delete();
-    } catch {
-      // Metadata is cleared even if an old managed image cannot be removed.
-    }
-  }
+  clearPreReleaseImages();
 
   await AsyncStorage.setItem(releaseCleanupKey, 'true');
 }
@@ -98,45 +91,16 @@ export function hydrateOutfits() {
   return hydrationPromise;
 }
 
-function persistImage(sourceUri: string, date: string) {
-  outfitDirectory.create({ idempotent: true, intermediates: true });
-
-  const source = new File(sourceUri);
-  const extension = source.extension || '.jpg';
-  const destination = new File(
-    outfitDirectory,
-    `${date}-${Date.now()}${extension}`,
-  );
-
-  source.copy(destination);
-  return destination;
-}
-
-function deleteManagedImage(imageUri: string) {
-  if (!imageUri.startsWith(outfitDirectory.uri)) {
-    return;
-  }
-
-  const image = new File(imageUri);
-  if (image.exists) {
-    try {
-      image.delete();
-    } catch {
-      // The new outfit is already saved; an orphaned old image is non-fatal.
-    }
-  }
-}
-
 export async function saveOutfit(input: OutfitInput) {
   await hydrateOutfits();
 
   const existingOutfit = snapshot.outfits.find(
     (outfit) => outfit.date === input.date,
   );
-  const persistedImage = persistImage(input.imageUri, input.date);
+  const persistedImageUri = await persistImage(input.imageUri, input.date);
   const outfit: Outfit = {
     id: existingOutfit?.id ?? `look-${input.date}`,
-    imageUri: persistedImage.uri,
+    imageUri: persistedImageUri,
     date: input.date,
     createdAt: existingOutfit?.createdAt ?? new Date().toISOString(),
   };
@@ -145,7 +109,7 @@ export async function saveOutfit(input: OutfitInput) {
   try {
     await AsyncStorage.setItem(storageKey, JSON.stringify(nextOutfits));
   } catch (error) {
-    persistedImage.delete();
+    deleteManagedImage(persistedImageUri);
     throw error;
   }
 
@@ -157,7 +121,7 @@ export async function saveOutfit(input: OutfitInput) {
 
   if (
     existingOutfit &&
-    existingOutfit.imageUri !== persistedImage.uri
+    existingOutfit.imageUri !== persistedImageUri
   ) {
     deleteManagedImage(existingOutfit.imageUri);
   }

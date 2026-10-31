@@ -460,3 +460,56 @@ The developer can then use Expo Go or an installed iOS/Android simulator.
   from the outfit store.
 - Persists a cleanup-complete marker so Looks saved after the migration are
   never removed by this cleanup again.
+
+## 2026-10-31 — Browser compatibility foundation (portfolio demo)
+
+- Chose an Expo Router single-page web export with Metro. The existing native
+  iOS/Android application and EAS profiles are unchanged.
+- Moved native outfit-photo file operations into a platform-resolved adapter;
+  browsers use a separate adapter and do not import native Expo FileSystem.
+- The initial web adapter converts browser-selected images to data URLs for
+  AsyncStorage metadata persistence. This is an interim solution for small
+  demo photos, NOT a scalable photo library: browser storage quotas may cause
+  large or numerous image saves to fail. A later portfolio phase should use
+  IndexedDB for image blobs and persist Closet items as well.
+- Skipped native camera/photo permissions for the web image picker so the
+  browser file dialog remains directly connected to a user click.
+- Added a repeatable web export script and CI smoke check (typecheck, lint,
+  web export) to verify future browser builds. No hosted release, backend,
+  Supabase, Docker, or new product features were added.
+- Scope remains focused on browser compatibility; live browser interaction,
+  persistence under refresh, and desktop layouts must be validated separately.
+
+## 2026-10-31 — Browser photo upload path
+
+- Focused the browser milestone on selecting, previewing, saving, and displaying
+  a photo in Looks and selecting a photo in Closet; deferred wider persistence.
+- Added a short-lived image handoff for Expo Router navigation. Browser-selected
+  data URLs stay in module memory rather than being embedded in route URLs.
+- Relabeled browser photo options to Upload from Computer and hid the native
+  Camera action on web. Native camera and photo-library flows remain unchanged.
+- Downscaled web outfit photos to at most 1200px on the longest side and JPEG
+  quality 0.72 before saving via the interim AsyncStorage-backed image adapter.
+- Browser-selected previews are intentionally temporary; a refresh on a preview
+  route requires choosing the image again.
+- Added a browser upload smoke test to exercise the UI, not just web bundling.
+- No Supabase, IndexedDB, Docker, hosted release, or account functionality.
+
+## 2026-10-31 — Portfolio website and GitHub Pages publishing
+
+- Chose free GitHub Pages project hosting instead of a separately managed web
+  service: one public repository hosts both an Expo Router browser demo and a
+  standalone project case study (`public/project.html`).
+- Added a GitHub Actions workflow to run npm ci, typecheck, lint, and the Expo
+  web export; only approved main-branch runs upload artifacts and deploy Pages.
+- Configure Expo Router `experiments.baseUrl=/virtual_closet` only within the
+  CI build to support repository-scoped GitHub Pages URLs without changing
+  native app routing or local Expo development.
+- Include `.nojekyll` to serve Expo assets and a `404.html` SPA fallback for
+  deep links.
+- The case-study page explicitly separates implemented features from future
+  features; it makes no AI or wear-analytics claims.
+- GitHub Pages must be enabled in repository Settings -> Pages and deployment
+  must succeed before any URL is claimed to be publicly accessible.
+- This milestone does not add a database, authentication, personal photo
+  publication, or production-grade browser persistence.

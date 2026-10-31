@@ -1,4 +1,5 @@
 import * as ImagePicker from 'expo-image-picker';
+import { Platform } from 'react-native';
 
 export type OutfitImageSource = 'camera' | 'library';
 
@@ -9,6 +10,15 @@ const pickerOptions: ImagePicker.ImagePickerOptions = {
 };
 
 export async function pickOutfitImage(source: OutfitImageSource) {
+  // On web, invoke the browser picker directly in the user's click gesture.
+  // Awaiting a permission API first can cause browsers to block the file dialog.
+  if (Platform.OS === 'web') {
+    const result = source === 'camera'
+      ? await ImagePicker.launchCameraAsync(pickerOptions)
+      : await ImagePicker.launchImageLibraryAsync(pickerOptions);
+    return result.canceled ? undefined : result.assets[0]?.uri;
+  }
+
   if (source === 'camera') {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
