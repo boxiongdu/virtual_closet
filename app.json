@@ -43,6 +43,11 @@
         "projectId": "b6527449-0343-4b89-b17d-95949daccc87"
       }
     },
-    "owner": "brodiedu1227"
+    "owner": "brodiedu1227",
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "name": "Virtual Closet"
+    }
   }
 }
