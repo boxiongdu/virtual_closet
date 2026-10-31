@@ -494,3 +494,22 @@ The developer can then use Expo Go or an installed iOS/Android simulator.
   route requires choosing the image again.
 - Added a browser upload smoke test to exercise the UI, not just web bundling.
 - No Supabase, IndexedDB, Docker, hosted release, or account functionality.
+
+## 2026-10-31 — Portfolio website and GitHub Pages publishing
+
+- Chose free GitHub Pages project hosting instead of a separately managed web
+  service: one public repository hosts both an Expo Router browser demo and a
+  standalone project case study (`public/project.html`).
+- Added a GitHub Actions workflow to run npm ci, typecheck, lint, and the Expo
+  web export; only approved main-branch runs upload artifacts and deploy Pages.
+- Configure Expo Router `experiments.baseUrl=/virtual_closet` only within the
+  CI build to support repository-scoped GitHub Pages URLs without changing
+  native app routing or local Expo development.
+- Include `.nojekyll` to serve Expo assets and a `404.html` SPA fallback for
+  deep links.
+- The case-study page explicitly separates implemented features from future
+  features; it makes no AI or wear-analytics claims.
+- GitHub Pages must be enabled in repository Settings -> Pages and deployment
+  must succeed before any URL is claimed to be publicly accessible.
+- This milestone does not add a database, authentication, personal photo
+  publication, or production-grade browser persistence.
