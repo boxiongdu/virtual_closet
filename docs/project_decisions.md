@@ -460,3 +460,22 @@ The developer can then use Expo Go or an installed iOS/Android simulator.
   from the outfit store.
 - Persists a cleanup-complete marker so Looks saved after the migration are
   never removed by this cleanup again.
+
+## 2026-10-31 — Browser compatibility foundation (portfolio demo)
+
+- Chose an Expo Router single-page web export with Metro. The existing native
+  iOS/Android application and EAS profiles are unchanged.
+- Moved native outfit-photo file operations into a platform-resolved adapter;
+  browsers use a separate adapter and do not import native Expo FileSystem.
+- The initial web adapter converts browser-selected images to data URLs for
+  AsyncStorage metadata persistence. This is an interim solution for small
+  demo photos, NOT a scalable photo library: browser storage quotas may cause
+  large or numerous image saves to fail. A later portfolio phase should use
+  IndexedDB for image blobs and persist Closet items as well.
+- Skipped native camera/photo permissions for the web image picker so the
+  browser file dialog remains directly connected to a user click.
+- Added a repeatable web export script and CI smoke check (typecheck, lint,
+  web export) to verify future browser builds. No hosted release, backend,
+  Supabase, Docker, or new product features were added.
+- Scope remains focused on browser compatibility; live browser interaction,
+  persistence under refresh, and desktop layouts must be validated separately.
