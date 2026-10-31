@@ -4,6 +4,7 @@ import {
   Alert,
   Pressable,
   ScrollView,
+  Platform,
   StyleSheet,
   Text,
   View,
@@ -23,6 +24,7 @@ import {
   type OutfitImageSource,
 } from '../../features/outfit/outfit.capture';
 import { useClothingItems } from '../../features/clothing/clothing.store';
+import { stageImageForNavigation } from '../../features/outfit/outfit.pending-image';
 import { colors, fontSizes, lineHeights, spacing } from '../../lib/theme';
 
 export default function ClosetScreen() {
@@ -56,7 +58,7 @@ export default function ClosetScreen() {
         setIsAddSheetOpen(false);
         router.push({
           pathname: '/clothing/new',
-          params: { imageUri },
+          params: { imageUri: stageImageForNavigation(imageUri) },
         });
       }
     } catch (error) {
